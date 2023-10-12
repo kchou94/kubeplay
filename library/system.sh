@@ -19,7 +19,7 @@ system::fedora::disable_selinux(){
 system::centos::config_repo(){
   infolog "Updated the yum repo file"
   yum clean -q all || true
-  cp -f ${RESOURCES_NGINX_DIR}/repos/CentOS-7-All-in-One.repo /etc/yum.repos.d/offline-resources.repo
+  cp -f "${RESOURCES_NGINX_DIR}"/repos/CentOS-7-All-in-One.repo /etc/yum.repos.d/offline-resources.repo
   sed -i "s#${DEFAULT_URL}#file://${RESOURCES_NGINX_DIR}#g" /etc/yum.repos.d/offline-resources.repo
   if yum makecache -q > /dev/null; then
     infolog "Updated the repo file successfully"
@@ -29,7 +29,7 @@ system::centos::config_repo(){
 system::fedora::config_repo(){
   infolog "Updated the yum repo file"
   yum clean -q all || true
-  cp -f ${RESOURCES_NGINX_DIR}/repos/CentOS-7-All-in-One.repo /etc/yum.repos.d/offline-resources.repo
+  cp -f "${RESOURCES_NGINX_DIR}"/repos/CentOS-7-All-in-One.repo /etc/yum.repos.d/offline-resources.repo
   sed -i "s#${DEFAULT_URL}#file://${RESOURCES_NGINX_DIR}#g" /etc/yum.repos.d/offline-resources.repo
   if yum makecache -q > /dev/null; then
     infolog "Updated the repo file successfully"
@@ -57,22 +57,22 @@ system::ubuntu::config_repo(){
 system::disable_firewalld(){
   if systemctl list-unit-files | grep -q firewalld >/dev/null; then
     infolog "Disable firewalld service"
-    systemctl stop firewalld && systemctl disable firewalld
+    systemctl disable firewalld --now
     infolog "Disabled firewalld service successfully"
   fi
 
   if systemctl list-unit-files | grep -q ufw >/dev/null; then
     infolog "Disable firewalld service"
-    systemctl stop ufw && systemctl disable ufw
+    systemctl disable ufw --now
     infolog "Disabled firewalld service successfully"
   fi
 }
 
 system::install_pkgs(){
   if command -v yum > /dev/null; then
-    yum install -q -y libseccomp createrepo ${COMMON_PKGS} > /dev/null
+    yum install -q -y libseccomp createrepo "${COMMON_PKGS}" > /dev/null
   elif command -v apt-get > /dev/null; then
-    apt-get install -qq -y libseccomp2 dpkg-dev ${COMMON_PKGS} > /dev/null
+    apt-get install -qq -y libseccomp2 dpkg-dev "${COMMON_PKGS}" > /dev/null
   fi
 }
 
@@ -81,8 +81,8 @@ system::install_chrony(){
   timedatectl set-ntp true
 
   CHRONY_CONF_FILE=$(find /etc/chrony* -type f -name 'chrony.conf' | head -n1)
-  sed -i '/.*iburst$/d' ${CHRONY_CONF_FILE}
-  sed -i "1 i server ${NTP_SERVER} iburst" ${CHRONY_CONF_FILE}
+  sed -i '/.*iburst$/d' "${CHRONY_CONF_FILE}"
+  sed -i "1 i server ${NTP_SERVER} iburst" "${CHRONY_CONF_FILE}"
 
   # Restart chrony daemon, in redhat is chronyd and debian is chrony
   systemctl enable chrony || systemctl enable chronyd

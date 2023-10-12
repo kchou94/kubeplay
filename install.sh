@@ -1,10 +1,21 @@
 #!/usr/bin/env bash
+
 INSTALL_TYPE=$1
-: ${INSTALL_TYPE:=all}
+# If INSTALL_TYPE is null or not set, set INSTALL_TYPE to all
+: "${INSTALL_TYPE:=all}"
 
 # Common utilities, variables and checks for all scripts.
+# Instructs a shell to exit if a command fails, i.e., if it outputs a non-zero exit status.
+# equivalent to set -e
 set -o errexit
+
+# Treats unset or undefined variables as an error when substituting (during parameter expansion).
+# Does not apply to special parameters such as wildcard * or @.
+# equivalent to set -u
 set -o nounset
+
+# The return value of a pipeline is the status of the last command that had a non-zero status upon exit.
+# If no command had a non-zero status upon exit, the value is zero.
 set -o pipefail
 
 # Gather variables about bootstrap system
@@ -26,7 +37,7 @@ KUBESPRAY_CONFIG_DIR="${KUBE_ROOT}/config/kubespray"
 INSTALL_STEPS_FILE="${KUBESPRAY_CONFIG_DIR}/.install_steps"
 
 # Include all functions from library/*.sh
-for file in ${KUBE_ROOT}/library/*.sh; do source ${file}; done
+for file in "${KUBE_ROOT}"/library/*.sh; do source "${file}"; done
 
 # Gather os-release variables
 if ! source /etc/os-release; then
@@ -34,18 +45,19 @@ if ! source /etc/os-release; then
   exit 1
 fi
 
-if [ ! -f ${CONFIG_FILE} ]; then
+if [ ! -f "${CONFIG_FILE}" ]; then
   errorlog "The ${CONFIG_FILE} file is not existing"
   exit 1
 fi
 
 deploy_compose(){
-  if grep -q 'deploy_compose' ${KUBE_ROOT}/.install_steps; then
+  if grep -q 'deploy_compose' "${KUBE_ROOT}"/.install_steps; then
     common::rudder_config
     common::load_images
     common::health_check
     return 0
   fi
+  # ID is from the step below: source /etc/os-release
   case ${ID} in
     Debian|debian)
       system::debian::config_repo
@@ -76,7 +88,7 @@ deploy_compose(){
   common::load_images
   common::compose_up
   common::health_check
-  echo 'deploy_compose' > ${KUBE_ROOT}/.install_steps
+  echo 'deploy_compose' > "${KUBE_ROOT}"/.install_steps
 }
 
 main(){

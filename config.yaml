@@ -1,0 +1,101 @@
+compose:
+  # Compose bootstrap node ip, default is local internal ip
+  internal_ip: 172.20.0.25
+  # Nginx http server bind port for download files and packages
+  nginx_http_port: 8080
+  # Registry domain for CRI runtime download images
+  registry_domain: kube.registry.local
+
+kubespray:
+  # Kubernetes version by default, only support v1.20.6
+  kube_version: v1.22.5
+  # For deploy HA cluster you must configure a external apiserver access ip
+  external_apiserver_access_ip: 127.0.0.1
+  # CNI support calico, flannel, canal, cilium
+  # Set network plugin to calico with vxlan mode by default
+  kube_network_plugin: calico
+  #Container runtime, only support containerd if offline deploy
+  container_manager: containerd
+  # Now only support host if use containerd as CRI runtime
+  etcd_deployment_type: host
+  # Settings for etcd event server
+  etcd_events_cluster_setup: true
+  etcd_events_cluster_enabled: true
+
+# Cluster nodes inventory info
+inventory:
+  all:
+    vars:
+      ansible_port: 22
+      ansible_user: root
+      ansible_ssh_pass: Password
+      # ansible_ssh_private_key_file: /kubespray/config/id_rsa
+    hosts:
+      node1:
+        ansible_host: 172.20.0.21
+      node2:
+        ansible_host: 172.20.0.22
+      node3:
+        ansible_host: 172.20.0.23
+      node4:
+        ansible_host: 172.20.0.24
+    children:
+      kube_control_plane:
+        hosts:
+          node1:
+          node2:
+          node3:
+      kube_node:
+        hosts:
+          node1:
+          node2:
+          node3:
+          node4:
+      etcd:
+        hosts:
+          node1:
+          node2:
+          node3:
+      k8s_cluster:
+        children:
+          kube_control_plane:
+          kube_node:
+      gpu:
+        hosts: {}
+      calico_rr:
+        hosts: {}
+
+### Default parameters ###
+## This filed not need config, will auto update,
+## if no special requirement, do not modify these parameters.
+default:
+  # NTP server ip address or domain, default is internal_ip
+  ntp_server:
+    - internal_ip
+  # Registry ip address, default is internal_ip
+  registry_ip: internal_ip
+  # Offline resource url for download files, default is internal_ip:nginx_http_port
+  offline_resources_url: internal_ip:nginx_http_port
+  # Use nginx and registry provide all offline resources
+  offline_resources_enabled: true
+  # Image repo in registry
+  image_repository: library
+  # Kubespray container image for deploy user cluster or scale
+  kubespray_image: "kubespray"
+  # Auto generate self-signed certificate for registry domain
+  generate_domain_crt: true
+  # For nodes pull image, use 443 as default
+  registry_https_port: 443
+  # For push image to this registry, use 5000 as default, and only bind at 127.0.0.1
+  registry_push_port: 5000
+  # Set false to disable download all container images on all nodes
+  download_container: false
+
+  # enable support hubble in cilium
+  cilium_enable_hubble: false
+  # install hubble-relay, hubble-ui
+  cilium_hubble_install: false
+  # install hubble-certgen and generate certificates
+  cilium_hubble_tls_generate: false
+  # Kube Proxy Replacement mode (strict/probe/partial)
+  cilium_kube_proxy_replacement: probe
